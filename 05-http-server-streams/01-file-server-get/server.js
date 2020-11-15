@@ -35,19 +35,22 @@ server.on('request', (req, res) => {
             res.end('server error');
         }
       });
-      reader.pipe(res);
-      // reader.on('data', (chunk) => {
-      //   const status = res.write(chunk);
-      //   if (!status) {
-      //     reader.pause();
-      //     res.once('drain', () => {
-      //       reader.resume();
-      //     });
-      //   }
-      // });
-      // reader.on('end', () => {
-      //   res.end();
-      // });
+      // reader.pipe(res);
+      reader.on('data', (chunk) => {
+        const status = res.write(chunk);
+        if (!status) {
+          reader.pause();
+          // res.once('drain', () => {
+          //   reader.resume();
+          // });
+        }
+      });
+      res.on('drain', () => {
+        if (reader.isPaused()) reader.resume();
+      });
+      reader.on('end', () => {
+        res.end();
+      });
       break;
 
     default:

@@ -55,10 +55,13 @@ server.on('request', (req, res) => {
         };
         serverError();
       });
-      res.on('close', () => {
-        if (res.finished) return;
+      req.on('aborted', () => {
         fs.unlink(filepath, serverError);
       });
+      // res.on('close', () => {
+      //   if (res.finished) return;
+      //   fs.unlink(filepath, serverError);
+      // });
 
       req.pipe(limitStream).pipe(writer);
       break;
