@@ -13,8 +13,7 @@ router.get('/subscribe', async (ctx, next) => {
   const index = clients.length;
   const p = new Promise((resolve) => clients.push(resolve));
   ctx.req.on('aborted', () => {
-    // clients.splice(index, 1);
-    clients[index] = null;
+    clients.length && clients.splice(index, 1);
   });
   try {
     ctx.body = await p;
