@@ -1,5 +1,6 @@
 const path = require('path');
 const Koa = require('koa');
+const Clients = require('./clients');
 const app = new Koa();
 
 app.use(require('koa-static')(path.join(__dirname, 'public')));
@@ -7,13 +8,13 @@ app.use(require('koa-bodyparser')());
 
 const Router = require('koa-router');
 const router = new Router();
-let clients = [];
+const clients = new Clients();
 
 router.get('/subscribe', async (ctx, next) => {
-  const index = clients.length;
-  const p = new Promise((resolve) => clients.push(resolve));
+  const [id, p] = clients.setClient();
   ctx.req.on('aborted', () => {
-    clients.length && clients.splice(index, 1);
+    console.log('aborted', id);
+    clients.deleteClient(id);
   });
   try {
     ctx.body = await p;
@@ -25,11 +26,9 @@ router.get('/subscribe', async (ctx, next) => {
 router.post('/publish', async (ctx, next) => {
   const {message} = ctx.request.body;
   if (!message) ctx.throw(400, 'Message must be passed.');
-  if (clients.length) {
-    for (const client of clients) {
-      if (typeof client === 'function') client(message);
-    }
-    clients = [];
+  if (clients.count()) {
+    const clientHandlers = clients.getClients();
+    for (const client of clientHandlers) client(message);
   }
   ctx.body = 'success';
 });
