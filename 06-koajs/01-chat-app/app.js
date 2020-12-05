@@ -5,6 +5,14 @@ const app = new Koa();
 
 app.use(require('koa-static')(path.join(__dirname, 'public')));
 app.use(require('koa-bodyparser')());
+app.use(async (ctx, next) => {
+  try {
+    await next();
+  } catch (e) {
+    ctx.status = 500;
+    ctx.body = 'server error';
+  }
+});
 
 const Router = require('koa-router');
 const router = new Router();
@@ -15,11 +23,7 @@ router.get('/subscribe', async (ctx, next) => {
   ctx.req.on('aborted', () => {
     clients.deleteClient(id);
   });
-  try {
-    ctx.body = await p;
-  } catch (e) {
-    ctx.throw(500, 'server error');
-  }
+  ctx.body = await p;
 });
 
 router.post('/publish', async (ctx, next) => {
