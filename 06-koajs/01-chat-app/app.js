@@ -13,7 +13,6 @@ const clients = new Clients();
 router.get('/subscribe', async (ctx, next) => {
   const [id, p] = clients.setClient();
   ctx.req.on('aborted', () => {
-    console.log('aborted', id);
     clients.deleteClient(id);
   });
   try {
