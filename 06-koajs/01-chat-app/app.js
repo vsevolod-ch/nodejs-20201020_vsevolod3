@@ -13,7 +13,8 @@ router.get('/subscribe', async (ctx, next) => {
   const index = clients.length;
   const p = new Promise((resolve) => clients.push(resolve));
   ctx.req.on('aborted', () => {
-    clients.splice(index, 1);
+    // clients.splice(index, 1);
+    clients[index] = null;
   });
   try {
     ctx.body = await p;
@@ -26,7 +27,9 @@ router.post('/publish', async (ctx, next) => {
   const {message} = ctx.request.body;
   if (!message) ctx.throw(400, 'Message must be passed.');
   if (clients.length) {
-    for (const client of clients) client(message);
+    for (const client of clients) {
+      if (typeof client === 'function') client(message);
+    }
     clients = [];
   }
   ctx.body = 'success';
